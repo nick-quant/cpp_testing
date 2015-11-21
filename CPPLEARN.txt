@@ -61,6 +61,87 @@ Person::Person(const string& fn, const string& sn): first_name(fn)
 	second_name = sn;
 } // What is the problem here with second_name? p 312 Stroustrup
 
+There is one thing that can be initialized where it is declared - in the body of the class (because we tend to init in member initialization list or in the body of constructor). 
+(in c# we can do it always). These are STATIC CONST INTEGRAL type members. They can be initialized with CONST expressions!
+public Foo
+{
+	static const int a = 1; // ok.
+	static const short r = 1; // ok.	
+	const int b = 2; // bad
+	static int c = 3; // bad
+	static const float d = f(6.0); // bad
+};
+But we should always initialize static objects that way>: const int FOO::d = 56; Do we need to do it with static const int? Only if we need to have some pointer to it. But then we don't need to reinit.
+const int Foo::a;
+...
+const int* p = &Foo::a;
+As an alternative we could use "Symbol constants"
+public:
+	enum { c1 = 2, c2 = 3, c4 = 67 };
+	
+When does the default assignment not work? (here we don't mean the cases when it doesn't work correctly like assigning pointers, but when it doesn't work at compile time).
+	non-static members are:
+	1. references (we cannot reassign references) // Actually this should work, just not as expected (my thoughts)
+	2. consts
+	3. of class with private assigning operator
+
+Bar(const Bar& rhs);
+Bar& operator = (const Bar& rhs);
+We just said that default assignment operator is bad when you have references in the class. And what about default copying?
+If we default copy and we have references in both of the instances then the references are pointing to one object, so we'll have problems destructing the objects. p 313.
+We need to use member initializer lists even in the copy constructors.
+
+4. Arrays of objects
+Table tbl[10]. If there is a constructor that doesn't need an initializer
+Bjarne says: there is no other way to initialize arguments of the constructor declaring an array apart from member initializer list.
+
+5. Local static objects:
+void fun(int i)
+{
+	if (i)
+	{
+		static Bar b1;
+		...
+	}
+	...
+}
+
+int main()
+{
+	fun(0); // b1 is not being constructed
+	fun(1); // b1 is being constructed, and not being destroyed returning from fun
+	fun(2); // b1 is not being constructed, and not being destroyed returning from fun
+	...
+	// Somewhere here b1 is being destroyed. All local statics are destroyed in the inverse order
+}
+
+6. Nonlocal objects
+Variables defined outside of the functions are initialized before main function and destroyed after main function. Dynamic linking makes things more complicated initializing after linking
+Nonlocal objects are initialized in the order of definition (remember that things are not defined in the body of the class, they are declared there!) Destructors in inverse order.
+No rule concerning nonlocal objects defined in different files. Think about the flags of the first usage that can help initialize the nonlocal objects in the right order and also static local objects.
+
+7. Temporary objects
+They are mostly created in arithmetic operations. Destroyed when the full expression (means: it is not the part of other expression) is ended. When not binded with reference (?) or not used to initialize named object (?). p 318
+
+void f(string& s1, string& s2, string& s3)
+{
+	const char* cs = (s1 + s2).c_str();
+	cout << cs; // cs as a member of temporary object should be destroyed by now.
+	
+	if ( strlen(cs = (s2 + s3).c_str()) < 8 && cs[0] = 'a')
+	{
+		cout << cs; // cs doesn't exist here
+	}
+}
+
+and now the special case:
+
+const string& s3 = s1 + s2; // s1 and s2 are bound with s3. Why const? Temporary object may be bound only witha const reference.
+string s4 = s5 + s7; // copy constructor of string called with argument (temporary object)
+
+8. Placing objects in memory blocks. "placement new"
+void* buf = reinterpret_cast<void*>(0xF00F); // Some meaningful address
+X* obj = new (buf) X; // new(sizeof(X), buf)
 
 
 
