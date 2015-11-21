@@ -1,0 +1,81 @@
+To learn in C plus plus
+
+Classes.
+Static members should be always defined
+
+Copying
+Default copying of all the fields
+	Date t = today;
+If we don't like it then we can reassign = (see example to correct line 29)
+
+When we are calling a const function in a class it means that we are calling this function from const this. And const objects cannot change fields. so we can 
+	const_cast<Obj*>(this).unconst_func()
+Whereas if we have a const object we can't do that trick - it is an undefined behaviour. We have mutable for this. We can avoid the problem of caching if we put the mutable things into some object to which we have a pointer. So const method can change the content of the memory block that is pointed by the pointer.
+
+
+Difference between class and structure
+Structure is a class with default public access
+
+Bjarne says: helper functions are the functions that don't need the access to private fields of the function. For example difference of two dates can be implemented without using private fields.
+Bjarne says: it's better just to put them in the same namespace as  the class. The reason is that it gets the ode more complicated. if the class is too easy we may do that (include into class) anyway
+Bjarne calls the simple classes like Date: concrete classes
+
+What does the default constructor do: implicitly calls the default constructors of the member fields and constructors of the basic classes
+
+What are the patterns of constructing and destructing the object?
+1. some local (in a function) instance of a class defined on stack constructed when the flow of the program passes its definition and is destroyed when we get out of scope.
+Destructors of the local objects are executed in the inverse order of creation
+
+void h()
+{
+	// Table contains some info on the heap (defined with new)
+	Table t1;
+	Table t2 = t1; // Is the default constructor called for t2 and then assignment or is it an initialization by copy constructor?
+	
+	Table t3;
+	t3 = t2;
+}
+// Find two problems! 3 times destructor and memory leak p 308 of 1136 (Stroustrup). What do we want to correct?
+When defining copy constructor don't forget about self assignment!
+Difference between copy constructor and assignment: CC works with a raw unassigned memory whereas assignment works with correctly build objects
+Assignment can throw exceptions therefore there is a topic "exception-safe copy operators"
+
+2. Dynamic: new and delete
+3. Class objects as members of classes
+Member Initializer List:
+Club::Club(const string& n, Date fd): name(n), members(), founded(fd) { ... }
+Theses constructors are called before the body of the constructor. The order of initialization is the order of DECLARATION in the class.
+The order of destruction is inverse and is called AFTER the body of destructor.
+If the constructor of the class (member) doesn't need the parameters, then we can just omit it from member initializer list. The init order is as was.
+Sometimes initializing is necessary: const members, references and classes that don't have default constructor.
+A good example (close topic):
+class Person
+{
+	Person(const string& fn, const string& sn);
+	string first_name;
+	string second_name;
+};
+
+Person::Person(const string& fn, const string& sn): first_name(fn)
+{
+	second_name = sn;
+} // What is the problem here with second_name? p 312 Stroustrup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
