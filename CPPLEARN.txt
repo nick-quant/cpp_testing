@@ -180,6 +180,61 @@ constructor and destructor (??) because of ambigous destructor call when we are 
 
 
 INHERITANCE.
+Using the class as the basic in the .h file of the inherited class is similar to having the object of the basic class as a field (in this case we must know its size). That's why we need a definition of the basic class, not the declaration class Basic; We want include.
+Why are the private fields not accessible to inherited classes? Then anybody could make an inherited class from our basic and get all the info he wants.
+How to call the function member of the basic class (in inherited) if we redefined it. Basic::doSmth();
+One cannot initialize the members of the basic class (because they are being initialized by the basic class constructor).
+Sequence of construction and destruction:
+Construction:
+1. Constructor of basic class
+	a) member initializer list in order of declaration!
+	b) body of constructor
+2. Constructor of inherited class
+	a) ---
+	b) ---
+Destruction in the reverse order.
+
+void (const Manager& m)
+{
+	Employee e = m; // Constructs e from Employee fields of m, so Manager data is lost. "Slicing"
+	e = m; // Assigns only the Employee fields.
+}
+
+Assignments and constructors are never inherited.
+How do we make the assignment in the inherited class?? (Do we need to explicitly call the assignment of the basic class?)
+
+A question: how can we ensure which derivated class is pointed by Base*?
+1. Somehow guarantee that we use the objects of one type
+2. Special field in the class to retunr type
+3. dynamic_cast
+4. Use virtual functions
+
+Why is 2 very bad. Assume we have a new class and we add a new const to enum { M, E, S }. Then we have to change everywhere in the code if there is any switch (e->type()), because there is no S in the switch. (My thoughts - it is architecturally strange to save the field in the basic class that this class is basic).
+With virtual functions we still can call the basic virtual function doing it explicitly
+Type with virtual functions - polymorphic
+What's the deal with virtual fucntions calling virtual functions? p  384
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
