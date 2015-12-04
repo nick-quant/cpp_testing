@@ -215,9 +215,37 @@ Type with virtual functions - polymorphic
 What's the deal with virtual fucntions calling virtual functions? p  384
 
 
+Templates
+Members of the template class are templates themselves, so defining them outside of the class we should use template<class T> and the class itself (Foo<T> not Foo)
+template<class T>
+T* Foo<T>::SomeFunc() {}
 
+We can do the same declaring a structure inside of the class. This will be a private structure (not an instance of the structure).
 
+template<type T>
+class Foo {
+	struct S;
+	S* s;
+};
 
+template<type T>
+struct Foo<T>::S {
+	// some declarations which may use T, because it is a templated struct as well
+};
+
+By the way:
+struct p { int a; }; // creates a type named p (no instance)
+struct { int a = 0; } p; // creates an struct p of an unnamed structure;
+
+some more about definitions. When we define a function member of a class we use <> twice, firstly to say that it is the template method template<class T>, secondly addressing to class (we have to address to a concretized class Foo<T>, should we write Foo it stands for a template not a class). Do we need a third time beside the name of the function? SomeFunc<T>. We don't need but we may when we define a constructor:
+template<type T>
+Foo<T>::Foo<T>() {}
+but we better use:
+template<type T>
+Foo<T>::Foo() {}
+One may not overload the name of the class template. Nothing can be named so.
+
+All the type arguments must have the interface that the concretization of class template is awaiting.
 
 
 
