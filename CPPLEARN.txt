@@ -245,9 +245,79 @@ template<type T>
 Foo<T>::Foo() {}
 One may not overload the name of the class template. Nothing can be named so.
 
-All the type arguments must have the interface that the concretization of class template is awaiting.
+All the type arguments must have the interface that the instantiation of class template is awaiting.
 
+Template instantiation
+Explicitly defined versions of template for specific template arguments are called specializations.
+The code of the unused functions of an instantiation of template class is not generated.
+According to the C++ standard, template methods which are never used  are never instantiated.
 
+As arguments of the templates can be considered type parameters, fixed type parameters (int), template parameters (int max)
+Why is good to pass the borders of the array via a template parameter. Because then we avoid costly allocation and deallocation.
+Template parameter argument may be a:
+	1. const expression
+	2. object address (it is not a const expression, that's why u cannot turn it into an integer and then define array on stack)
+	3. address function with "external linking" (???) f
+	4. pointer to the class member (??) (&X::of)
+	--5. char literals cannot be 'f' z.B.
+All these parameters are interpreted as constants within a class.
+
+			What is a pointer to class member?  Look into vec.cpp
+***********************************THINK**********************************************
+
+Errors in class templates.
+There may be errors in instantiation (found by a compiler), and errors not directly connected to the values of template arguments.
+Compiler tells us about the errors only when the corresponding function is called if we are talking about the errors inside of the functions (for example a function must return int but it doesn't), very simple errors inside of the template function are nevertheless alarmed. Errors outside of the functions are alarmed by the compiler, because it has nothing to do with function instantiation.
+Some errors are found only when instantiating (for example a type argument doesn't implement an assumed interface)
+The first moment when the error connected to template argument is found is the point when we first instantiate template class with the specific argument (point of instantiation).
+Sometimes problems of this character can be found at the stage of linking. It may be the case when the template argument is only declared and not defined in the scope and we do not know whether it satisfies the interface.
+
+Template functions (ordinary, not class members)
+When the templated function is called the template arguments are deduced from the arguments of the function (if it is possible, otherwise the compiler needs additional information).
+Are there any template function specializations?
+Compiler deduces the template function arguments and PARAMETERS when this is unambigous, for example in this case as well:
+template <class T, int max>
+T& lookup(Buffer<T, max>& b, const char* p); // T, max can be deduced from Buffer<T, max>
+Parameters of template CLASS are never deduced (int max) - because it can be ambigous.. Think about it (smth about flexibility given by many construtors it can become impossible). If we really want it we can use a function template for which a compiler can do parameter deducing.
+If a template parameter cannot be deduced by a compiler, then we have to write it explicitly calling a function.
+A typical example is when we parametrize the return type like in static_cast<int*> (we cannot deduce it from the arguments in most cases). Explicitly using the name of the parameter we can create the families of functions of type casting or creating of objects. For example we can have a function that creates an object of any class.
+
+Overloading of template functions.
+Yes, we  can overload (for example):
+template <class T> T sqrt(T);
+template <class T> complex<T> sqrt(complex<T>); // T deduced from comlex<T>
+double sqrt(double);
+How do we choose which of the instantiations or non-template functions we will use:
+1. For all the function templates we choose the corresponding best instantiation if it exists.
+2. Then we compare them all and choose the most specific of all the templates. If one template contains all the instantiations of the second, and the second is ok then we choose the second. If we cannot say which one is smaller we take both.
+3. We take all non-parametric functions. And choose as if it were normal functions. If we template arguments were deduced from function arguments, then these types are not to be promoted, standardly or user cast.
+4. If there are two candidates which are equally good and one of them is non-template and one template we choose non-template.
+5. If there are no candidates, or two candidates are equally good then we get an error (either no candidate or ambigous call).
+
+template <class T> T max(T, T);
+
+const int s = 7;
+max(1, 2); // max<int>
+max('a', 'b'); // max<char>
+max(2.7, 4.9); // max<double>
+max(s, 2); // max<int> (trivial cast from const int to int)
+max('a', 1); // ambigous (no standard cast). char -> int or int -> char. max<char> or max<int>. max<int> would be better but we said no promotions. max(int, int) would have worked but rule for instantiations are stricter.
+max(2.7, 1); // ambigous. the same
+The solution is an explicit qualification or explicitly define non-template functions.
+Tricky example. Why does this work?
+template <class T> class B;
+template <class T> class D: public B<T>;
+template <class T> void f(B<T>*);
+
+D<int>* pd;
+f(pd); // resolved. though we cast D<int>* to B<int>*. Prohibited is only the casting of template argument - int.
+I should learn about resolving overloading for normal functions. About return types and consts and so on.
+The function arguments that do not take part in deducing of the template arguments can be freely promoted, standard cast (derived to base) and user casts.
+
+If we are sorting why is it better to send less predicate as a template argument? 1. We can send a class and thus pass all its public functions without executing any code. 2. Easy inlining. Inlining template argument easy and if we have a pointer to a function - not.
+Each class generated from the template gets a copy of each static member of the class template.
+
+We can do cool specializations
 
 
 
