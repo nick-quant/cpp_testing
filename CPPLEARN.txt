@@ -317,12 +317,86 @@ The function arguments that do not take part in deducing of the template argumen
 If we are sorting why is it better to send less predicate as a template argument? 1. We can send a class and thus pass all its public functions without executing any code. 2. Easy inlining. Inlining template argument easy and if we have a pointer to a function - not.
 Each class generated from the template gets a copy of each static member of the class template.
 
-We can do cool specializations
+We can do cool default values.
+template<class T, class C = Cmp<T>>
+Good to know: template parameters used to set the the different versions of class instantiation are called traits. Strings of the standard library for example have char_traits
+Checking of the semantics of the default value of the template argument is done only if the corresponding instantiation takes place AND using of the argument.
+
+Specialization.
+User-defined specialization, user-specialization.
+Problem: we have a class template that is frequently instantiated with different type arguments and these arguments are pointers. It means a lot of code will be generated for each instantiation. What we can do is to define a specialization (full):
+template<> Vector<void*>
+{
+}
+Here we will define a different behaviour to that of the vectors of values. But we want pointers other than void*. They do not fit automatically into Vector<void*>. Hence, we define a partial specialization (means that we specialize some of the arguments).
+template<class T> Vector<T*> : public Vector<void*> { /*....*/ }
+Normally we don't use <..> after the definition of template class.
+T* in this case is a specialization pattern. If we make Vector<int**> T is int*.
+When the partial specialization is used template argument is deduced from the specialization pattern. then the argument of the template is not equal to template parameter that we type in.
+General template should be declared before the specialization. Why is that? Because we need to know the set of template arguments before doing any specialization. It suffices only to declare the general template.
+Specialization should be visible to the code trying to use it.
+Both general and specialization must be in one namespace.
+Specialization are partially ordered (more or less specialized).
+
+template<class T> Vector;
+template<class T> Vector<T*>;
+template<> Vector<void*>;
+
+A VERY COOL trick worth knowing about:
+template<class C> class BasicOps {};
+template<class C> class MathContainer: public BasicOps<MathContainer> {};
+
+template<class C> class BasicOps
+{
+	bool operator == (const C& cont_2) const
+	{
+		if (Derived().size() != cont_2.size())
+			return false;
+		for (int i = 0; i < cont_2.size(); ++i)
+			if (Derived()[i] != cont_2[i])
+				return false;
+		return true;
+		
+	}
+	bool operator != (const C&) const;
+	const C& Derived() const
+	{	
+		return static_cast<const C&>(*this);
+	}
+};
 
 
+templte<class C> class MathContainer: public BasicOps<MathContainer<C> > {};
+This is a good method to define the basic operations for all the good containers.
+Look at page 423. in class declaration of the friend function
+friend bool operator == <> (...);
 
+When we write code once and then reuse it with many different types, this is called polymorphism.
+virtual functions - run-time polymorohism
+compile time or parametric polymorphism - templates.
 
+class or a class template can have a member that is also a template:
+A good example:
+template<type T> complex
+{
+	template<class T> complex(const complex<T>& c): re(c.real()), im(c.imag()) {}
+}
+One cannot define a virtual template member function. Because then it will be problematic to have a virtual table. Linker would have to add a new entry point to a virtual table when the function is called with new template arguments.
 
+class templates are frequently called type generators.
+It is important to notice that vector<D*> is not a vector<B*>, whereas D* is B*, because then we could do the following
+
+vector<D*> vd;
+f(vd);
+
+void f(vector<B*> vb)
+{
+	B* another = new D2;
+	vb.Add(another);
+}
+// Now we end up with vd containig D2* as well, whereas D and D2 are not inherited from each other.
+
+If we define a function template outside of the visibility scope of the code using it, we should add a keyword export to it, outherwise it won't be visible (in Microsoft compiler we don't need it).
 
 
 
