@@ -1,0 +1,71 @@
+
+class HashTableFull {}
+
+template<typename E, int (*hash_func)(int), int boxes> class HashTableFreeList {
+protected:
+	struct Slot;
+	Slot _slots[boxes];
+	int _ids[boxes]; // These are kinds of pointers to the slots
+	int _head;
+	int _tail;
+
+public:
+	HashTableFreeList(): _head(0), _tail(boxes - 1) {
+		for (int i = 0; i < boxes; ++i)
+			_ids[i] = i;
+	}
+	
+	E* Search(int key) {
+		int index = hash_func(key);
+		if (_ids[index] == -1 || !_slots[_ids[index]].valid)
+			return 0;
+		else {
+			Slot* current = &_slots[_ids[index]];
+			while (current) {
+				if (current.key == key)
+					return current.value;
+				current = current.next;
+			}			
+			return 0;
+		}
+	}
+	
+	void Insert(int key, const E& value) {
+		if (_head == boxes - 1)
+			throw HashTableFull();
+		int index = hash_func(key);
+		// First check that there are no elements in this hash already
+		if (_slots[_ids[index]].valid) {
+			Slot* current = &_slots[_ids[index]];
+			while (current.next != 0)
+				current = current.next;
+			current.next = &_slots[_head];			
+		}
+		else // We need to take the element from the head			
+			_ids[index] = _head;			
+		_slots[_head].valid = true;
+		_slots[_head].next = 0;
+		_slots[_head].val = value;
+		_slots[_head].key = key;
+		_ids[_head] = -1; // Invalidate the head pointer
+		++_head;
+	}
+	
+	void Delete(int key) {
+		int index = hash_func(key);
+		if (_slots[_ids[index]].valid) {
+			Slot* current = &_slots[_ids[index]];
+			if (current->key == key) {
+				_ids[index] = current->next;
+				current.next = 0;
+				current.valid = false;
+				
+			}
+			while (current) {
+				if (current->key == key)
+		}
+	}
+	
+		
+	
+	

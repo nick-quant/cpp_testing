@@ -1,0 +1,426 @@
+To learn in C plus plus
+
+Classes.
+Static members should be always defined
+
+Copying
+Default copying of all the fields
+	Date t = today;
+If we don't like it then we can reassign = (see example to correct line 29)
+
+When we are calling a const function in a class it means that we are calling this function from const this. And const objects cannot change fields. so we can 
+	const_cast<Obj*>(this).unconst_func()
+Whereas if we have a const object we can't do that trick - it is an undefined behaviour. We have mutable for this. We can avoid the problem of caching if we put the mutable things into some object to which we have a pointer. So const method can change the content of the memory block that is pointed by the pointer.
+
+
+Difference between class and structure
+Structure is a class with default public access
+
+Bjarne says: helper functions are the functions that don't need the access to private fields of the function. For example difference of two dates can be implemented without using private fields.
+Bjarne says: it's better just to put them in the same namespace as  the class. The reason is that it gets the ode more complicated. if the class is too easy we may do that (include into class) anyway
+Bjarne calls the simple classes like Date: concrete classes
+
+What does the default constructor do: implicitly calls the default constructors of the member fields and constructors of the basic classes
+
+What are the patterns of constructing and destructing the object?
+1. some local (in a function) instance of a class defined on stack constructed when the flow of the program passes its definition and is destroyed when we get out of scope.
+Destructors of the local objects are executed in the inverse order of creation
+
+void h()
+{
+	// Table contains some info on the heap (defined with new)
+	Table t1;
+	Table t2 = t1; // Is the default constructor called for t2 and then assignment or is it an initialization by copy constructor?
+	
+	Table t3;
+	t3 = t2;
+}
+// Find two problems! 3 times destructor and memory leak p 308 of 1136 (Stroustrup). What do we want to correct?
+When defining copy constructor don't forget about self assignment!
+Difference between copy constructor and assignment: CC works with a raw unassigned memory whereas assignment works with correctly build objects
+Assignment can throw exceptions therefore there is a topic "exception-safe copy operators"
+
+2. Dynamic: new and delete
+3. Class objects as members of classes
+Member Initializer List:
+Club::Club(const string& n, Date fd): name(n), members(), founded(fd) { ... }
+Theses constructors are called before the body of the constructor. The order of initialization is the order of DECLARATION in the class.
+The order of destruction is inverse and is called AFTER the body of destructor.
+If the constructor of the class (member) doesn't need the parameters, then we can just omit it from member initializer list. The init order is as was.
+Sometimes initializing is necessary: const members, references and classes that don't have default constructor.
+A good example (close topic):
+class Person
+{
+	Person(const string& fn, const string& sn);
+	string first_name;
+	string second_name;
+};
+
+Person::Person(const string& fn, const string& sn): first_name(fn)
+{
+	second_name = sn;
+} // What is the problem here with second_name? p 312 Stroustrup
+
+There is one thing that can be initialized where it is declared - in the body of the class (because we tend to init in member initialization list or in the body of constructor). 
+(in c# we can do it always). These are STATIC CONST INTEGRAL type members. They can be initialized with CONST expressions!
+public Foo
+{
+	static const int a = 1; // ok.
+	static const short r = 1; // ok.	
+	const int b = 2; // bad
+	static int c = 3; // bad
+	static const float d = f(6.0); // bad
+};
+But we should always initialize static objects that way>: const int FOO::d = 56; Do we need to do it with static const int? Only if we need to have some pointer to it. But then we don't need to reinit.
+const int Foo::a;
+...
+const int* p = &Foo::a;
+As an alternative we could use "Symbol constants"
+public:
+	enum { c1 = 2, c2 = 3, c4 = 67 };
+	
+When does the default assignment not work? (here we don't mean the cases when it doesn't work correctly like assigning pointers, but when it doesn't work at compile time).
+	non-static members are:
+	1. references (we cannot reassign references) // Actually this should work, just not as expected (my thoughts)
+	2. consts
+	3. of class with private assigning operator
+
+Bar(const Bar& rhs);
+Bar& operator = (const Bar& rhs);
+We just said that default assignment operator is bad when you have references in the class. And what about default copying?
+If we default copy and we have references in both of the instances then the references are pointing to one object, so we'll have problems destructing the objects. p 313.
+We need to use member initializer lists even in the copy constructors.
+
+4. Arrays of objects
+Table tbl[10]. If there is a constructor that doesn't need an initializer
+Bjarne says: there is no other way to initialize arguments of the constructor declaring an array apart from member initializer list.
+
+5. Local static objects:
+void fun(int i)
+{
+	if (i)
+	{
+		static Bar b1;
+		...
+	}
+	...
+}
+
+int main()
+{
+	fun(0); // b1 is not being constructed
+	fun(1); // b1 is being constructed, and not being destroyed returning from fun
+	fun(2); // b1 is not being constructed, and not being destroyed returning from fun
+	...
+	// Somewhere here b1 is being destroyed. All local statics are destroyed in the inverse order
+}
+
+6. Nonlocal objects
+Variables defined outside of the functions are initialized before main function and destroyed after main function. Dynamic linking makes things more complicated initializing after linking
+Nonlocal objects are initialized in the order of definition (remember that things are not defined in the body of the class, they are declared there!) Destructors in inverse order.
+No rule concerning nonlocal objects defined in different files. Think about the flags of the first usage that can help initialize the nonlocal objects in the right order and also static local objects.
+
+7. Temporary objects
+They are mostly created in arithmetic operations. Destroyed when the full expression (means: it is not the part of other expression) is ended. When not binded with reference (?) or not used to initialize named object (?). p 318
+
+void f(string& s1, string& s2, string& s3)
+{
+	const char* cs = (s1 + s2).c_str();
+	cout << cs; // cs as a member of temporary object should be destroyed by now.
+	
+	if ( strlen(cs = (s2 + s3).c_str()) < 8 && cs[0] = 'a')
+	{
+		cout << cs; // cs doesn't exist here
+	}
+}
+
+and now the special case:
+
+const string& s3 = s1 + s2; // s1 and s2 are bound with s3. Why const? Temporary object may be bound only witha const reference.
+string s4 = s5 + s7; // copy constructor of string called with argument (temporary object)
+
+8. Placing objects in memory blocks. "placement new"
+void* buf = reinterpret_cast<void*>(0xF00F); // Some meaningful address
+X* obj = new (buf) X; // new(sizeof(X), buf)
+
+We can place the objects in special Arenas:
+
+class Arena
+{
+public:
+	virtual void* alloc(size_t) = 0;	
+	virtual void free(void*) = 0;
+	// ...
+};
+
+void* operator new(size_t sz, Arena* a)
+{
+	return a->alloc(sz);
+}
+
+extern Arena* Persistent;
+extern Arena* Shared;
+
+void g(int i)
+{
+	X* p = new (Persistent) X(i);
+	X* q = new (Persistent) X(i);
+}
+
+Now how do we delete something form inside of the arena? It is the only (?) place where we need to explicitly call the destructor:
+void destroy(X* p, Arena* a)
+{
+	p->~X();
+	a->free(p);
+}
+
+9. Unions. Low level stuff.
+Structure where all the fields are assigned with one memory block. Genereally the compiler doesn't know which of the fieldsis being used. You don't want anything to lie there that has an explicit
+constructor and destructor (??) because of ambigous destructor call when we are coming out of the scope.
+
+
+INHERITANCE.
+Using the class as the basic in the .h file of the inherited class is similar to having the object of the basic class as a field (in this case we must know its size). That's why we need a definition of the basic class, not the declaration class Basic; We want include.
+Why are the private fields not accessible to inherited classes? Then anybody could make an inherited class from our basic and get all the info he wants.
+How to call the function member of the basic class (in inherited) if we redefined it. Basic::doSmth();
+One cannot initialize the members of the basic class (because they are being initialized by the basic class constructor).
+Sequence of construction and destruction:
+Construction:
+1. Constructor of basic class
+	a) member initializer list in order of declaration!
+	b) body of constructor
+2. Constructor of inherited class
+	a) ---
+	b) ---
+Destruction in the reverse order.
+
+void (const Manager& m)
+{
+	Employee e = m; // Constructs e from Employee fields of m, so Manager data is lost. "Slicing"
+	e = m; // Assigns only the Employee fields.
+}
+
+Assignments and constructors are never inherited.
+How do we make the assignment in the inherited class?? (Do we need to explicitly call the assignment of the basic class?)
+
+A question: how can we ensure which derivated class is pointed by Base*?
+1. Somehow guarantee that we use the objects of one type
+2. Special field in the class to retunr type
+3. dynamic_cast
+4. Use virtual functions
+
+Why is 2 very bad. Assume we have a new class and we add a new const to enum { M, E, S }. Then we have to change everywhere in the code if there is any switch (e->type()), because there is no S in the switch. (My thoughts - it is architecturally strange to save the field in the basic class that this class is basic).
+With virtual functions we still can call the basic virtual function doing it explicitly
+Type with virtual functions - polymorphic
+What's the deal with virtual fucntions calling virtual functions? p  384
+
+
+Templates
+Members of the template class are templates themselves, so defining them outside of the class we should use template<class T> and the class itself (Foo<T> not Foo)
+template<class T>
+T* Foo<T>::SomeFunc() {}
+
+We can do the same declaring a structure inside of the class. This will be a private structure (not an instance of the structure).
+
+template<type T>
+class Foo {
+	struct S;
+	S* s;
+};
+
+template<type T>
+struct Foo<T>::S {
+	// some declarations which may use T, because it is a templated struct as well
+};
+
+By the way:
+struct p { int a; }; // creates a type named p (no instance)
+struct { int a = 0; } p; // creates an struct p of an unnamed structure;
+
+some more about definitions. When we define a function member of a class we use <> twice, firstly to say that it is the template method template<class T>, secondly addressing to class (we have to address to a concretized class Foo<T>, should we write Foo it stands for a template not a class). Do we need a third time beside the name of the function? SomeFunc<T>. We don't need but we may when we define a constructor:
+template<type T>
+Foo<T>::Foo<T>() {}
+but we better use:
+template<type T>
+Foo<T>::Foo() {}
+One may not overload the name of the class template. Nothing can be named so.
+
+All the type arguments must have the interface that the instantiation of class template is awaiting.
+
+Template instantiation
+Explicitly defined versions of template for specific template arguments are called specializations.
+The code of the unused functions of an instantiation of template class is not generated.
+According to the C++ standard, template methods which are never used  are never instantiated.
+
+As arguments of the templates can be considered type parameters, fixed type parameters (int), template parameters (int max)
+Why is good to pass the borders of the array via a template parameter. Because then we avoid costly allocation and deallocation.
+Template parameter argument may be a:
+	1. const expression
+	2. object address (it is not a const expression, that's why u cannot turn it into an integer and then define array on stack)
+	3. address function with "external linking" (???) f
+	4. pointer to the class member (??) (&X::of)
+	--5. char literals cannot be 'f' z.B.
+All these parameters are interpreted as constants within a class.
+
+			What is a pointer to class member?  Look into vec.cpp
+***********************************THINK**********************************************
+
+Errors in class templates.
+There may be errors in instantiation (found by a compiler), and errors not directly connected to the values of template arguments.
+Compiler tells us about the errors only when the corresponding function is called if we are talking about the errors inside of the functions (for example a function must return int but it doesn't), very simple errors inside of the template function are nevertheless alarmed. Errors outside of the functions are alarmed by the compiler, because it has nothing to do with function instantiation.
+Some errors are found only when instantiating (for example a type argument doesn't implement an assumed interface)
+The first moment when the error connected to template argument is found is the point when we first instantiate template class with the specific argument (point of instantiation).
+Sometimes problems of this character can be found at the stage of linking. It may be the case when the template argument is only declared and not defined in the scope and we do not know whether it satisfies the interface.
+
+Template functions (ordinary, not class members)
+When the templated function is called the template arguments are deduced from the arguments of the function (if it is possible, otherwise the compiler needs additional information).
+Are there any template function specializations?
+Compiler deduces the template function arguments and PARAMETERS when this is unambigous, for example in this case as well:
+template <class T, int max>
+T& lookup(Buffer<T, max>& b, const char* p); // T, max can be deduced from Buffer<T, max>
+Parameters of template CLASS are never deduced (int max) - because it can be ambigous.. Think about it (smth about flexibility given by many construtors it can become impossible). If we really want it we can use a function template for which a compiler can do parameter deducing.
+If a template parameter cannot be deduced by a compiler, then we have to write it explicitly calling a function.
+A typical example is when we parametrize the return type like in static_cast<int*> (we cannot deduce it from the arguments in most cases). Explicitly using the name of the parameter we can create the families of functions of type casting or creating of objects. For example we can have a function that creates an object of any class.
+
+Overloading of template functions.
+Yes, we  can overload (for example):
+template <class T> T sqrt(T);
+template <class T> complex<T> sqrt(complex<T>); // T deduced from comlex<T>
+double sqrt(double);
+How do we choose which of the instantiations or non-template functions we will use:
+1. For all the function templates we choose the corresponding best instantiation if it exists.
+2. Then we compare them all and choose the most specific of all the templates. If one template contains all the instantiations of the second, and the second is ok then we choose the second. If we cannot say which one is smaller we take both.
+3. We take all non-parametric functions. And choose as if it were normal functions. If we template arguments were deduced from function arguments, then these types are not to be promoted, standardly or user cast.
+4. If there are two candidates which are equally good and one of them is non-template and one template we choose non-template.
+5. If there are no candidates, or two candidates are equally good then we get an error (either no candidate or ambigous call).
+
+template <class T> T max(T, T);
+
+const int s = 7;
+max(1, 2); // max<int>
+max('a', 'b'); // max<char>
+max(2.7, 4.9); // max<double>
+max(s, 2); // max<int> (trivial cast from const int to int)
+max('a', 1); // ambigous (no standard cast). char -> int or int -> char. max<char> or max<int>. max<int> would be better but we said no promotions. max(int, int) would have worked but rule for instantiations are stricter.
+max(2.7, 1); // ambigous. the same
+The solution is an explicit qualification or explicitly define non-template functions.
+Tricky example. Why does this work?
+template <class T> class B;
+template <class T> class D: public B<T>;
+template <class T> void f(B<T>*);
+
+D<int>* pd;
+f(pd); // resolved. though we cast D<int>* to B<int>*. Prohibited is only the casting of template argument - int.
+I should learn about resolving overloading for normal functions. About return types and consts and so on.
+The function arguments that do not take part in deducing of the template arguments can be freely promoted, standard cast (derived to base) and user casts.
+
+If we are sorting why is it better to send less predicate as a template argument? 1. We can send a class and thus pass all its public functions without executing any code. 2. Easy inlining. Inlining template argument easy and if we have a pointer to a function - not.
+Each class generated from the template gets a copy of each static member of the class template.
+
+We can do cool default values.
+template<class T, class C = Cmp<T>>
+Good to know: template parameters used to set the the different versions of class instantiation are called traits. Strings of the standard library for example have char_traits
+Checking of the semantics of the default value of the template argument is done only if the corresponding instantiation takes place AND using of the argument.
+
+Specialization.
+User-defined specialization, user-specialization.
+Problem: we have a class template that is frequently instantiated with different type arguments and these arguments are pointers. It means a lot of code will be generated for each instantiation. What we can do is to define a specialization (full):
+template<> Vector<void*>
+{
+}
+Here we will define a different behaviour to that of the vectors of values. But we want pointers other than void*. They do not fit automatically into Vector<void*>. Hence, we define a partial specialization (means that we specialize some of the arguments).
+template<class T> Vector<T*> : public Vector<void*> { /*....*/ }
+Normally we don't use <..> after the definition of template class.
+T* in this case is a specialization pattern. If we make Vector<int**> T is int*.
+When the partial specialization is used template argument is deduced from the specialization pattern. then the argument of the template is not equal to template parameter that we type in.
+General template should be declared before the specialization. Why is that? Because we need to know the set of template arguments before doing any specialization. It suffices only to declare the general template.
+Specialization should be visible to the code trying to use it.
+Both general and specialization must be in one namespace.
+Specialization are partially ordered (more or less specialized).
+template<class T> Vector;
+template<class T> Vector<T*>;
+template<> Vector<void*>;
+
+A VERY COOL trick worth knowing about:
+template<class C> class BasicOps {};
+template<class C> class MathContainer: public BasicOps<MathContainer> {};
+
+template<class C> class BasicOps
+{
+	bool operator == (const C& cont_2) const
+	{
+		if (Derived().size() != cont_2.size())
+			return false;
+		for (int i = 0; i < cont_2.size(); ++i)
+			if (Derived()[i] != cont_2[i])
+				return false;
+		return true;
+		
+	}
+	bool operator != (const C&) const;
+	const C& Derived() const
+	{	
+		return static_cast<const C&>(*this);
+	}
+};
+
+
+templte<class C> class MathContainer: public BasicOps<MathContainer<C> > {};
+This is a good method to define the basic operations for all the good containers.
+Look at page 423. in class declaration of the friend function
+friend bool operator == <> (...);
+
+When we write code once and then reuse it with many different types, this is called polymorphism.
+virtual functions - run-time polymorohism
+compile time or parametric polymorphism - templates.
+
+class or a class template can have a member that is also a template:
+A good example:
+template<type T> complex
+{
+	template<class T> complex(const complex<T>& c): re(c.real()), im(c.imag()) {}
+}
+One cannot define a virtual template member function. Because then it will be problematic to have a virtual table. Linker would have to add a new entry point to a virtual table when the function is called with new template arguments.
+
+class templates are frequently called type generators.
+It is important to notice that vector<D*> is not a vector<B*>, whereas D* is B*, because then we could do the following
+
+vector<D*> vd;
+f(vd);
+
+void f(vector<B*> vb)
+{
+	B* another = new D2;
+	vb.Add(another);
+}
+// Now we end up with vd containig D2* as well, whereas D and D2 are not inherited from each other.
+
+If we define a function template outside of the visibility scope of the code using it, we should add a keyword export to it, outherwise it won't be visible (in Microsoft compiler we don't need it).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

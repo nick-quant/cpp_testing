@@ -1,0 +1,247 @@
+#include <iostream>
+#include <string>
+#include "stack_const_dyn.h"
+#include "stack.h"
+#include "queue.h"
+#include "twostack.h"
+#include "exceptions.h"
+#include "dequeue.h"
+#include "queue_2stack.h"
+#include "Stack_2Queues.h"
+#include "list.h"
+#include "list_new.h"
+#include <list>
+#include "bintree_2.h"
+
+using namespace std;
+
+void stack_1();
+void stack_2();
+void queue_1();
+void twostack();
+void dequeue_1();
+void queue_2stack();
+void stack_2queues();
+void list_1();
+void list_1_ptr();
+void list_double();
+void bin_tree();
+
+int main()
+{
+	bin_tree();
+	/*list<int> lst1, lst2;
+	lst1.push_front(1);
+	lst1.push_front(1);
+	lst1.push_front(1);
+	
+	lst2.push_front(2);
+	lst2.push_front(2);
+	lst2.push_front(2);	
+	auto it = lst2.begin();
+	lst1.insert(it, 3);
+	cout << lst1.front() << "\t" << lst2.front() << endl;*/
+	return 0;
+}
+
+void stack_1()
+{
+	Stack<double, 10> st;
+	for (int i = 0; i < 13; ++i)
+	{
+		st.push(i * i - 2.5 * i);
+		cout << i << ": " << st.top() << "\t" << st.size() << endl;		
+	}
+	
+	st.top() = 6;
+	cout << endl;
+	while (st.size() >= 1)
+	{
+		st.pop();
+		st.top() = 6;
+		cout << ": " << st.top() << "\t" << st.size() << endl;		
+	}
+}
+
+void stack_2()
+{
+	StackConstDyn<double> st(10);
+	for (int i = 0; i < 13; ++i)
+	{
+		st.push(i * i - 2.5 * i);
+		cout << i << ": " << st.top() << "\t" << st.size() << endl;		
+	}
+	
+	st.top() = 6;
+	while (st.size() >= 1)
+	{
+		cout << ": " << st.top() << "\t" << st.size() << endl;		
+		st.pop();
+	}
+}
+
+void queue_1() {
+	Queue<int, 10> q;
+	for (int i = 0; i < 10; ++i) {
+		q.enqueue(i);
+		cout << ": " << q.back() << "\t"  << q.front() << endl;
+	}
+		
+	for (int i = 0; i < 8; ++i) {
+		q.dequeue();
+		cout << ": " << q.back() << "\t"  << q.front() << endl;
+	}
+	
+	for (int i = 0; i < 6; ++i) {
+		q.enqueue(i * 10);
+		cout << ": " << q.back() << "\t"  << q.front() << endl;
+	}
+}
+
+void twostack() {
+	TwoStack<int, 10> ts;
+	ts.push_left(1);
+	ts.push_right(23);
+	ts.push_right(55);
+	ts.push_left(223);
+	ts.pop_left();
+	ts.pop_right();
+	cout << ": " << ts.top_left() << "\t" << ts.top_right() << endl;
+	cout << ": " << ts.size_left() << "\t" << ts.size_right() << endl;
+	ts.pop_left();
+	ts.pop_left();
+}
+
+void dequeue_1() {
+	Dequeue<int, 5> d;
+	d.push_back(-1);	
+	d.push_front(-1);
+	d.push_front(-1);
+	d.push_back(-1);
+	d.push_back(-1);
+	d.push_front(-1);
+	d.push_front(-1);
+}
+
+void queue_2stack()
+{
+	Queue_2Stacks<int, 5> qs;
+	cout << qs.size() << endl;
+	qs.enqueue(2);
+	cout << qs.size() << endl;		
+	qs.enqueue(2);
+	cout << qs.size() << endl;
+	qs.enqueue(2);
+	cout << qs.size() << endl;
+	qs.enqueue(2);
+	cout << qs.size() << endl;		
+	qs.enqueue(2);
+	cout << qs.size() << endl;
+	qs.enqueue(2);	
+	cout << qs.size() << endl;
+	qs.dequeue();
+	cout << qs.size() << endl;
+	qs.dequeue();
+	cout << qs.size() << endl;
+	qs.dequeue();
+	cout << qs.size() << endl;
+	qs.dequeue();
+	cout << qs.size() << endl;		
+	qs.enqueue(2);
+	cout << qs.size() << endl;
+	qs.enqueue(2);
+	cout << qs.size() << endl;
+	qs.enqueue(2);
+	cout << qs.size() << endl;
+}
+
+void stack_2queues() {
+	Stack_2Queues<int, 5> sq;
+	sq.push(4);
+	cout << sq.size() << endl;
+	sq.push(4);
+	cout << sq.size() << endl;
+	sq.pop();
+	cout << sq.size() << endl;
+	sq.pop();
+	cout << sq.size() << endl;
+	sq.pop();
+	cout << sq.size() << endl;	
+	sq.push(4);
+	cout << sq.size() << endl;
+	sq.push(4);
+	cout << sq.size() << endl;
+	sq.push(4);
+	cout << sq.size() << endl;
+	sq.push(4);
+	cout << sq.size() << endl;
+	sq.push(4);
+	cout << sq.size() << endl;
+}
+
+void list_1() {
+	SingleLinkList<int> lst;
+	lst.push_front(3);
+	lst.push_front(43);
+	lst.push_front(11);
+	cout << lst.size() << endl;
+	lst.pop_front();
+	cout << lst.size() << endl;
+	lst.pop_front();
+	cout << lst.size() << endl;	
+	lst.pop_front();
+	cout << lst.size() << endl;	
+	lst.pop_front();
+	cout << lst.size() << endl;
+}
+
+void list_1_ptr() {
+	string* s = new string("22");
+	string* s_2 = new string("11");
+	SingleLinkList<string*> lst;
+	lst.push_front(s);
+	lst.push_front(s_2);
+	lst.pop_front();
+	lst.pop_front();	
+}
+
+void list_double() {
+	DoubleLinkList<int> lst;
+	lst.push_back(1);
+	lst.push_back(2);
+	lst.push_front(-1);
+	lst.push_front(-2);
+}
+
+
+void bin_tree() {
+	Bintree<int> tree;
+	tree.Root().val = 0;
+	auto left_root = tree.SetLeftChild(&tree.Root(), -1);
+	auto right_root = tree.SetRightChild(&tree.Root(), 1);
+	tree.SetLeftChild(left_root, -10);
+	tree.SetRightChild(left_root, -11);
+	tree.SetRightChild(right_root, 11);
+	tree.PrintAllRecursive(tree.Root());
+	tree.PrintAllNoMemory();
+	cout << endl;
+	tree.PrintAll();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

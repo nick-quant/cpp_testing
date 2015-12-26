@@ -1,0 +1,31 @@
+Trick with nonrecursive traverse of the binary tree (any rooted tree) (down-left, up_right...)
+Trick with having only one pointer in the doubly linked array
+Trick with implementing queue in a vector rather than list
+All the leaves pointing to each other (bin tree)
+leaves pointing to root (bin tree)
+free list
+
+Corment solve problems 10-1 10-2 10-3 after the chapter 10
+
+When the number of keys actually stored is small relative to the total number of
+possible keys, hash tables become an effective alternative to directly addressing an array,
+
+11.1-4 Program it.
+Two solutions: realistic (mine). have recursive bit arrays that say whether the block is clean or not
+theoretical solution very elegant but probabilistic (with stack). May not always work
+
+What are the prerequisites of hash functions for container?
+Google what are the good hash functions?
+
+Idea: what if a hashset has a little hashset inside instead of the list.
+Some ideas: If we uniformly randomly (uniformly) pick the elements from the Universe, and then hash them and see the keys where they are hashed in, this should be a uniform distribution. BUT: we don't know the distribution of used keys from the universe, and they might even not be independent
+We also don't want close keys to have close hashes.
+
+Division method.
+Keys are natural numbers.  h(k) = k mod m
+if m is a 2^p, then k mod m are the p lowest bits. SO it doesn't depend on all the bits. (if we know that all are equally likely then doesn't matter, where low bits are equally likely). But then it is easy to make a key with the same hash. Is not bad to have a prime not near the power of 2
+
+Multiplication method h(k) = floor((m(kA mod 1))) where 0 < A < 1. m = 2^p A is good at 0.618(Knuth says)
+
+In universal hashing hash function is random at each run, so the hashing is different, so adversary cannot statically choose bad keys.
+A collection of hash functions is called universal if for each pair of distinct keys k,l the number of hash functions for which h(k) = h(l) is at most |H|/m
